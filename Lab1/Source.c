@@ -1,2 +1,6 @@
-#include<stdio.h>
-int c = (/**/5 + 5)
+/*fdsfdsfds*/
+/*/*/[xyi]
+"/*אגûאגûאגû*/"
+'/*adasdasdsa*/'
+* / '
+* / "
