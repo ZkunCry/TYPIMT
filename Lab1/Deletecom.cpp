@@ -34,10 +34,10 @@ int main()
     ifstream SourceFile("Source.c");
     FileOpenCheck(SourceFile);
     ofstream OutFile("Out.c");
-    char c=' ';
-    while (!SourceFile.eof())
+    char c;
+    
+    while ((int)(c = SourceFile.get())!=EOF)
     {
-       
         switch (states)
         {
         case State::Normal:
@@ -115,7 +115,6 @@ int main()
             }
             break;
         }
-        c = SourceFile.get();
     }
     SourceFile.close();
     OutFile.close();
