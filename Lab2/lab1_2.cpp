@@ -11,15 +11,18 @@ enum class State
     Comment,
     EndComment,
     Double_Quotes,
-    Odinari_Quotes
+    Odinari_Quotes,
+    EndAloneComment,
+    PredDoubleQuote,
+    PredOdQuote
 };
 enum class Literals
 {
     TYPE_Quote = '"',
     TYPE_OdinaryQuote = '\''
-};
 
-static bool FileOpenCheck(ifstream &SourceFile)
+};
+ static bool FileOpenCheck(ifstream& SourceFile)
 {
     if (SourceFile.is_open())
         cout << "File is open\n";
@@ -33,8 +36,8 @@ static bool FileOpenCheck(ifstream &SourceFile)
 int main()
 {
     State states = State::Normal;
-    ifstream SourceFile("Source.c");
-    ofstream OutFile("Out.c");
+    ifstream SourceFile("Source.cpp");
+    ofstream OutFile("Out.cpp");
     char c;
     if (FileOpenCheck(SourceFile))
     {
@@ -66,8 +69,7 @@ int main()
                     states = State::Comment;
                 else if (c == '/')
                 {
-                    states = State::Slash;
-                    OutFile << '/';
+                    states = State::EndAloneComment;
                 }
                 else
                 {
@@ -84,29 +86,60 @@ int main()
 
             case State::EndComment:
                 if (c == '/')
+                {
                     states = State::Normal;
+                    OutFile << ' ';
+                }
                 else if (c == '*')
                     states = State::EndComment;
                 else
                     states = State::Comment;
-                
+
+                break;
+            case State::EndAloneComment:
+                if (c == '\n')
+                {
+                    states = State::Normal;
+                    OutFile << '\n';
+                }
+                else if (c == '\r')
+                {
+                    states = State::Normal;
+                    OutFile << '\r';
+                }
                 break;
             case State::Double_Quotes:
                 switch (c)
                 {
+                 case '\\':
+                    OutFile << c;
+                    states = State::PredDoubleQuote;
+                    break;
                 case (char)Literals::TYPE_Quote:
                     states = State::Normal;
                     OutFile << c;
                     break;
+                
                 default:
                     OutFile << c;
                     break;
                 }
                 break;
-
+            case State::PredDoubleQuote:
+                OutFile << c;
+                states = State::Double_Quotes;
+                break;
+            case State::PredOdQuote:
+                OutFile << c;
+                states = State::Odinari_Quotes;
+                break;
             case State::Odinari_Quotes:
                 switch (c)
                 {
+                case '\\':
+                    OutFile << c;
+                    states = State::PredOdQuote;
+                    break;
                 case (char)Literals::TYPE_OdinaryQuote:
                     states = State::Normal;
                     OutFile << c;
