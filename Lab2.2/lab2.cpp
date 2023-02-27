@@ -49,11 +49,18 @@ int main()
     ifstream SourceFile("Source.cpp");
     ofstream OutFile("Out.cpp");
     char c;
+
     if (FileOpenCheck(SourceFile))
     {
         
         while ((int)(c = SourceFile.get()) != EOF)
         {
+            if ((isalpha(c) ||c == '_') && !isdigit(c) && states == State::Normal)
+            {
+                states = State::Skip;
+                OutFile << c;
+                continue;
+            }
 
             switch (states)
             {
@@ -104,7 +111,7 @@ int main()
                 if (!isalpha(c) && !isdigit(c))
                 {
                     states = State::Normal;
-                    OutFile  <<'\t' <<"unsigned int" <<c;
+                    OutFile  <<'\t' <<"int" <<c;
                     break;
                 }
                 else if(!isxdigit(c))
@@ -122,7 +129,7 @@ int main()
                 if (!isalpha(c) && !isdigit(c))
                 {
                     states = State::Normal;
-                    OutFile << c;
+                    OutFile << '\t' << "int" << c;
                     break;
                 }
                 else if (!isOctal(c))
