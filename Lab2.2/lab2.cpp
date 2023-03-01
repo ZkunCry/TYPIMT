@@ -18,14 +18,20 @@ enum class State
     Number,
     Hex,
     Octal,
-    Skip
-
+    Skip,
+    Identifier,
+    UnsignedInt,
+    UnsignedLongInt,
+    UnsignedLongLongInt,
+    LongInt,
+    LongLongint,
+    Decimal,
+    PreX
 };
 enum class Literals
 {
     TYPE_Quote = '"',
     TYPE_OdinaryQuote = '\''
-
 };
  static bool FileOpenCheck(ifstream& SourceFile)
 {
@@ -38,30 +44,34 @@ enum class Literals
     }
     return 1;
 }
- static const bool isOctal(char pc )
- {
-     int num = atoi(&pc);
-     return num >= 0 && num <= 7;
- }
+static const bool isOctal(char pc)
+{
+    int num = atoi(&pc);
+    return num >= 0 && num <= 7;
+}
 int main()
 {
     State states = State::Normal;
     ifstream SourceFile("Source.cpp");
     ofstream OutFile("Out.cpp");
     char c;
-
     if (FileOpenCheck(SourceFile))
     {
-        
+
         while ((int)(c = SourceFile.get()) != EOF)
         {
-            if ((isalpha(c) ||c == '_') && !isdigit(c) && states == State::Normal)
+            if ((isalpha(c) || c == '_') && !isdigit(c) && states == State::Normal)
             {
-                states = State::Skip;
+                states = State::Identifier;
                 OutFile << c;
                 continue;
             }
-
+         /*   if (isdigit(c) && (states != State::Octal || states != State::Hex))
+            {
+                states = State::Decimal;
+                OutFile << c;
+                continue;
+            }*/
             switch (states)
             {
             case State::Normal:
@@ -82,16 +92,25 @@ int main()
                     states = State::Number;
                     OutFile << c;
                     break;
-               
+
                 default:
                     OutFile << c;
                     break;
                 }
                 break;
+            case State::Decimal:
+                if (!isalpha(c) && !isdigit(c))
+                {
+                    states = State::Normal;
+                    OutFile << '\t' << "int" << c;
+                    break;
+                }
+               
             case State::Number:
+               
                 if (tolower(c) == 'x')
                 {
-                    states = State::Hex;
+                    states = State::PreX;
                     OutFile << c;
                     break;
                 }
@@ -107,44 +126,157 @@ int main()
                     OutFile << c;
                     break;
                 }
-            case State::Hex:
-                if (!isalpha(c) && !isdigit(c))
+            case State::PreX:
+                if (isxdigit(c))
                 {
-                    states = State::Normal;
-                    OutFile  <<'\t' <<"int" <<c;
-                    break;
-                }
-                else if(!isxdigit(c))
-                {
-                    states = State::Skip;
-                    OutFile << c<<'\t' <<c <<"  ERROR";
+                    states = State::Hex;
+                    OutFile << c;
                 }
                 else
                 {
+                    states = State::Skip;
+                    OutFile << c << '\t' << "  ERROR!";
+                }
+                break;
+
+            case State::Hex:
+                 if (toupper(c) == 'U')
+                {
+                    states = State::UnsignedInt;
                     OutFile << c;
-                    states = State::Hex;
+                }
+                else if (toupper(c) == 'L')
+                {
+                    states = State::LongInt;
+                    OutFile << c;
+                }
+                
+                else if (!isalpha(c) && !isdigit(c))
+                {
+                    states = State::Normal;
+                    OutFile << '\t' << "int" << c;
+                }
+                else if (!isxdigit(c))
+                 {
+                     states = State::Skip;
+                     OutFile << c << '\t' << "  ERROR!";
+                 }
+                else
+                {
+                     states = State::Hex;
+                     OutFile << c;
                 }
                 break;
             case State::Octal:
+
                 if (!isalpha(c) && !isdigit(c))
                 {
                     states = State::Normal;
                     OutFile << '\t' << "int" << c;
                     break;
                 }
-                else if (!isOctal(c))
+                else if (toupper(c) == 'U')
+                {
+                    states = State::UnsignedInt;
+                    OutFile << c;
+                }
+                else if (toupper(c) == 'L')
+                {
+                    states = State::LongInt;
+                    OutFile << c;
+                }
+                else if (!isOctal(c) || isalpha(c))
                 {
                     states = State::Skip;
                     OutFile << c << '\t' << c << "  ERROR";
                 }
+              
                 else
                 {
                     OutFile << c;
                     states = State::Octal;
                 }
                 break;
+            case State::UnsignedInt:
+
+                if (toupper(c) == 'L')
+                {
+                    states = State::UnsignedLongInt;
+                    OutFile << c;
+                }
+                else if (isalpha(c) || isdigit(c))
+                {
+                    states = State::Skip;
+                    OutFile << c << '\t' << c << "  ERROR!";
+                }
+                else
+                {
+                    states = State::Normal;
+                    OutFile << '\t' << "unsigned int" << c;
+                }
+                break;
+            case State::UnsignedLongInt:
+                if (toupper(c) == 'L')
+                {
+                    states = State::UnsignedLongLongInt;
+                    OutFile << c;
+                }
+                else if (isalpha(c) || isdigit(c))
+                {
+                    states = State::Skip;
+                    OutFile << c << '\t' << c << "  ERROR!";
+
+                }
+                else
+                {
+                    states = State::Normal;
+                    OutFile << '\t'  << "unsigned long int"<<c;
+                }
+                break;
+            case State::UnsignedLongLongInt:
+                if (isalpha(c) || isdigit(c))
+                {
+                    states = State::Skip;
+                    OutFile << c << '\t' << c << "  ERROR!";
+
+                }
+                else
+                {
+                    states = State::Normal;
+                    OutFile << '\t' << "unsigned long long int" << c;
+                }
+                break;
+            case State::LongInt:
+                if (toupper(c) == 'L')
+                {
+                    states = State::LongLongint;
+                    OutFile << c;
+                }
+                else if (isalpha(c) || isdigit(c))
+                {
+                    states = State::Skip;
+                    OutFile << c << '\t' << c << "  ERROR!";
+                }
+                else
+                {
+                    states = State::Normal;
+                    OutFile << '\t' << "long int" << c;
+                }
+                break;
+            case State::LongLongint:
+                if (isalpha(c) || isdigit(c))
+                {
+                    states = State::Skip;
+                    OutFile << c << '\t' << c << "  ERROR!";
+                }
+                else
+                {
+                    states = State::Normal;
+                    OutFile << '\t' << "long long int" << c;
+                }
+                break;
             case State::Skip:
-                if (!isalpha(c) || !isdigit(c))
+                if (!isalpha(c) && !isdigit(c))
                 {
                     states = State::Normal;
                     OutFile << c;
@@ -153,9 +285,27 @@ int main()
                 else
                 {
                     states = State::Skip;
-                    OutFile << c;
+
                     break;
                 }
+            case State::Identifier:
+                if (!isalpha(c) && !isdigit(c) && c != '_' && c !='$')
+                {
+                    states = State::Skip;
+                    OutFile << c << '\t' << c << "  ERROR";
+                }
+                else if (isalpha(c) || isdigit(c) || c == '_' || c == '$')
+                {
+                    OutFile << c;
+                    states = State::Identifier;
+                    
+                }
+                else
+                {
+                    states = State::Normal;
+                    OutFile << c;
+                }
+                break;
             case State::Slash:
                 if (c == '*')
                     states = State::Comment;
