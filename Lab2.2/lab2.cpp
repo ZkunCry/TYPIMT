@@ -59,16 +59,23 @@ int main()
     ifstream SourceFile("Source.cpp");
     ofstream OutFile("Out.cpp");
     char c;
+
     if (FileOpenCheck(SourceFile))
     {
 
         while ((int)(c = SourceFile.get()) != EOF)
         {
-            if ((isdigit(c) && c !='0') && states == State::Normal)
+            if ((isdigit(c) && c !='0') && states == State::Normal )
             {
                 states = State::Decimal;
                 OutFile << c;
                 continue;
+            }
+            if ((isalpha(c) || c == '_') && states == State::Normal)
+            {
+                states = State::Identifier;
+                OutFile << c;
+             
             }
             switch (states)
             {
@@ -111,7 +118,7 @@ int main()
                     states = State::Decimal;
                     OutFile << c;
                  }
-                else if (c == 'x' || isalpha(c) || c =='.' || c ==',')
+                else if (isalpha(c) || c == '.' || c == ',' || c == '?' || c == '$')
                 {
                     states = State::Skip;
                     OutFile << c << '\t' << "  ERROR!";
@@ -181,17 +188,17 @@ int main()
                     states = State::LongInt;
                     OutFile << c;
                 }
+                
+                else if (!isalpha(c) && !isdigit(c) && c !='.' && c !=',' && c !='?' && c !='$')
+                {
+                    states = State::Normal;
+                    OutFile << '\t' << "int" << c;
+                }
                 else if (!isxdigit(c) || c == '.')
                  {
                      states = State::Skip;
                      OutFile << c << '\t' << "  ERROR!";
                  }
-                else if (!isalpha(c) && !isdigit(c))
-                {
-                    states = State::Normal;
-                    OutFile << '\t' << "int" << c;
-                }
-                
                 else
                 {
                      states = State::Hex;
@@ -210,13 +217,13 @@ int main()
                     OutFile << c;
                 }
                 
-                else  if (!isalpha(c) && !isdigit(c))
+                else  if (!isalpha(c) && !isdigit(c) && c != '.' && c != ',' && c != '?' && c != '$')
                 {
                     states = State::Normal;
                     OutFile << '\t' << "int" << c;
 
                 }
-                else if (!isOctal(c) || c == '.')
+                else if (!isOctal(c) || c == '.' || isalpha(c))
                {
                    states = State::Skip;
                    OutFile << c << '\t' << "  ERROR";
@@ -255,7 +262,6 @@ int main()
                 {
                     states = State::Skip;
                     OutFile << c << '\t' << c << "  ERROR!";
-
                 }
                 else
                 {
@@ -315,25 +321,24 @@ int main()
                 else
                 {
                     states = State::Skip;
-
                     break;
                 }
             case State::Identifier:
-                if (!isalpha(c) && !isdigit(c) && c != '_' && c !='$')
-                {
-                    states = State::Skip;
-                    OutFile << c << '\t' << c << "  ERROR";
-                }
-                else if (isalpha(c) || isdigit(c) || c == '_' || c == '$')
+              
+                if (isalpha(c) || isdigit(c) || c == '_' )
                 {
                     OutFile << c;
                     states = State::Identifier;
-                    
                 }
-                else
+                else  if (!isalpha(c) && !isdigit(c))
                 {
                     states = State::Normal;
                     OutFile << c;
+                }
+                else
+                {
+                    states = State::Skip;
+                    OutFile << c << '\t' << "  ERROR";
                 }
                 break;
             case State::Slash:

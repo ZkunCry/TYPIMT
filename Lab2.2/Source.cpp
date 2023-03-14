@@ -1,3 +1,11 @@
+some_text_3
+x#fdfd
+3some
+
+/*0746 ?*/ 5 &( 1$UL)
+
+0x7465&(0377.UL ^ m + 1BUL)
+0x746?5 & (0377?UL ^ m + 1BUL)
 0
 0.
 0UL

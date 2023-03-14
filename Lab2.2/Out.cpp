@@ -1,3 +1,11 @@
+ssome_text_3
+xx#ffdfd
+3s	  ERROR!
+
+  5	int &( 1$	  ERROR!)
+
+0x7465	int&(0377.	  ERROR ^ mm + 1B	  ERROR!)
+0x746?	  ERROR! & (0377?	  ERROR ^ mm + 1B	  ERROR!)
 0	int
 0.	ERROR!!
 0UL	unsigned long int
