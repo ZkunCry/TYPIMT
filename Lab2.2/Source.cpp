@@ -1,11 +1,21 @@
-some_text_3
-x#fdfd
-3some
 
-/*0746 ?*/ 5 &( 1$UL)
+0x45ULL
+0x123LLU
+0x123LU
+
+0x45LL
+
+0x45LU
+
+
+0x45UL
+
+0x45U
+
+0x45L
 
 0x7465&(0377.UL ^ m + 1BUL)
-0x746?5 & (0377?UL ^ m + 1BUL)
+0x746?5 & (0377UL ^ m + 1BUL)
 0
 0.
 0UL
@@ -32,8 +42,6 @@ x#fdfd
 012345LT
 012345LLT
 012345U
-
-
 
 0x12345FAdL
 0x12345FAdLL

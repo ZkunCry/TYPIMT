@@ -1,11 +1,21 @@
-ssome_text_3
-xx#ffdfd
-3s	  ERROR!
 
-  5	int &( 1$	  ERROR!)
+0x45ULL	unsigned long long int
+0x123LLU	unsigned long long int
+0x123LU	unsigned long int
 
-0x7465	int&(0377.	  ERROR ^ mm + 1B	  ERROR!)
-0x746?	  ERROR! & (0377?	  ERROR ^ mm + 1B	  ERROR!)
+0x45LL	long long int
+
+0x45LU	unsigned long int
+
+
+0x45UL	unsigned long int
+
+0x45U	unsigned int
+
+0x45L	long int
+
+0x7465	int&(0377.	  ERROR ^ m + 1B	  ERROR!)
+0x746	int?5	int & (0377UL	unsigned long int ^ m + 1B	  ERROR!)
 0	int
 0.	ERROR!!
 0UL	unsigned long int
@@ -32,8 +42,6 @@ xx#ffdfd
 012345LT	T  ERROR!
 012345LLT	T  ERROR!
 012345U	unsigned int
-
-
 
 0x12345FAdL	long int
 0x12345FAdLL	long long int
