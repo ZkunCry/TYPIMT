@@ -1,53 +1,40 @@
+123UU	  ERROR!
 
-0x45ULL	unsigned long long int
-0x123LLU	unsigned long long int
-0x123LU	unsigned long int
+0xf.	  ERROR!
+0xf_	  ERROR!
+0xf2	int
+01234.	  ERROR
+01234_	  ERROR
+01234	int
+0xY	  ERROR! 
+0x	ERROR!
+0xY	  ERROR! 
+0x	ERROR!+123	int
+11lul	  ERROR!
+124ULL	unsigned long long int
+123LLU	unsigned long long int
+1294lL	long long int
+0x14FB	int
+0xl	  ERROR! 
+123423423	int
+012325u	unsigned int
+200lu	unsigned long int
+200lul	  ERROR!
+200l.	  ERROR!
 
-0x45LL	long long int
-
-0x45LU	unsigned long int
-
-
-0x45UL	unsigned long int
-
-0x45U	unsigned int
-
-0x45L	long int
-
-0x7465	int&(0377.	  ERROR ^ m + 1B	  ERROR!)
-0x746	int?5	int & (0377UL	unsigned long int ^ m + 1B	  ERROR!)
-0	int
-0.	ERROR!!
-0UL	unsigned long int
-0U	unsigned int
-0L	long int
-0	int
-
-123x	  ERROR!
-123.	  ERROR!
-123ul	unsigned long int
-123ULL	unsigned long long int
-123l	long int
+0239	  ERROR
+5	int
+123	int
+231	int
+1234	int
+25.	  ERROR!
+3	int
+342	int
+0x	ERROR!
+123	int
+12222	int
+1	int
+2	int
+3	int
 
 
-0x12T	  ERROR!
-0x12.	  ERROR!
-0x12x	  ERROR!
-
-012345ULL	unsigned long long int
-012345ULLT	T  ERROR!
-012345UL	unsigned long int
-012345LL	long long int
-012345L	long int
-012345LT	T  ERROR!
-012345LLT	T  ERROR!
-012345U	unsigned int
-
-0x12345FAdL	long int
-0x12345FAdLL	long long int
-0x12345FAdULT	T  ERROR!
-0x12345FAdULLT	T  ERROR!
-0x12345FAdUL	unsigned long int
-0x12345FAdU	unsigned int
-0x12345FEFULL	unsigned long long int
-123456789	int
