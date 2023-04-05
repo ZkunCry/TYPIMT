@@ -18,19 +18,21 @@ typedef struct Var
 {
     std::string IdName;
     long value;
+    Var(const std::string& src, long value);
 }Var;
+
 std::ifstream out;
 
 typedef struct Analizer
 {
     std::vector<Var> varlist;
     int c = EOF;
-    int last = -1;
+    int last = -1; 
 
     inline void GetSymbol();
     long GetVarValue(std::string &str);
     long& GetVarAdress(std::string name);
-    
+
     long MethodC();
     void MethodS();
     long& MethodL();
@@ -40,24 +42,27 @@ typedef struct Analizer
     long MethodI();
 
     void Print();
+    void PrintAll();
     void Run();
-    
+        
 }Analizer;
 
-static void PrintError(TypeErrors typeer, std::string param = nullptr)
+static void PrintError(TypeErrors typeer, std::string param = "")
 {
     switch (typeer)
     {
     case TypeErrors::SYNTAX_ERROR:
-        std::cout << "Error: Syntax error. "<< param << std::endl;
-    case TypeErrors::LONG_ID:
-        std::cout << "Error: "  << param << std::endl;
+        std::cout << "Error: Syntax error. " << std::endl;
+        break;
     case TypeErrors::ID_MISS:
         std::cout << "Error: "  << param << std::endl;
+        break;
     case TypeErrors::MANY_VAR:
         std::cout << "Error: "  << param << std::endl;
+        break;
     case TypeErrors::MISSING_SYMBOL:
-        std::cout << std::format("Error: {} missing.", param)<<std::endl;
+        std::cout << "Error:" << param << "missing." << std::endl;
+        break;
     }
     out.close();
     exit(1);
@@ -65,15 +70,10 @@ static void PrintError(TypeErrors typeer, std::string param = nullptr)
 
 int main(int argc, char** argv)
 {
-    if (argc < 2)
-    {
-       std::cout << "Command line parameter(file name) missing.\n" << std::endl;
-       return 1;
-    }
-    out.open(argv[1], std::ios::binary);
+    out.open("text.txt", std::ios::binary);
     if (!out.is_open())
     {
-        std::cout << "Error! Can't open file " << argv[1] << std::endl;
+        std::cout << "Error! Can't open file "<< std::endl;
         return 2;
     }
     Analizer start;
@@ -91,10 +91,13 @@ int main(int argc, char** argv)
  {
      if (str.size() == 0 || str.empty())
          PrintError(TypeErrors::SYNTAX_ERROR);
+
      for (int i = 0; i < varlist.size(); i++)
          if (varlist[i].IdName == str)
              return varlist[i].value;
+
      PrintError(TypeErrors::UNDEF_ID ,str);
+     return 0;
      
  }
 
@@ -107,10 +110,11 @@ int main(int argc, char** argv)
      }
      for (int i = 0; i < varlist.size(); i++)
          if (varlist[i].IdName == name)
-             return varlist[last = i].value;
-     last = varlist.size();
-     varlist[varlist.size()].IdName = name;
-     return varlist[varlist.size()].value;
+             return varlist[last=i].value;
+     
+     varlist.push_back(Var{name,0});
+     last = varlist.size()-1;
+     return varlist[varlist.size() - 1].value;
  }
 
  long Analizer::MethodC()
@@ -125,8 +129,8 @@ int main(int argc, char** argv)
      return x;
  }
 
- void Analizer::MethodS()
- {
+void Analizer::MethodS()
+{
      long& p = MethodL();
      if (c != '=')
          PrintError(TypeErrors::MISSING_SYMBOL,"\'=\'");
@@ -135,18 +139,22 @@ int main(int argc, char** argv)
      if (c != ';')
          PrintError(TypeErrors::MISSING_SYMBOL, "\';\'");
      GetSymbol();
- }
+}
 
  long& Analizer::MethodL()
  {
      std::string str;
-     int i = 0;
-     while ((c >= 'a' && c <= 'z') || c == '_' || (c >= '0' && c <= '9'))
+     if ((c >= 'a' && c <= 'z') || c == '_')
      {
          str.push_back(c);
          GetSymbol();
+         while ((c >= '0' && c <= '1'))
+         {
+             str.push_back(c);
+             GetSymbol();
+         }
      }
-     if (!i)
+     if (!str.size())
          PrintError(TypeErrors::ID_MISS);
      return GetVarAdress(str);
  }
@@ -156,10 +164,8 @@ int main(int argc, char** argv)
      long x = MethodT();
      while (c == '|')
      {
-         char p = c;
          GetSymbol();
-         if (p == '|')
-             x |= MethodT();
+         x |= MethodT();
      }
      return x;
  }
@@ -169,10 +175,8 @@ int main(int argc, char** argv)
      long x = MethodM();
      while (c == '&')
      {
-         char p = c;
          GetSymbol();
-         if (p == '&')
-             x &= MethodM();
+         x &= MethodM();
      }
      return x;
  }
@@ -210,23 +214,36 @@ int main(int argc, char** argv)
  long Analizer::MethodI()
  {
      std::string str;
-     int i = 0;
-     while ((c >= 'a' && c <= 'z') || c == '_' || (c >= '0' && c <= '1'))
+     if ((c >= 'a' && c <= 'z') || c == '_' )
      {
          str.push_back(c);
          GetSymbol();
+         while ((c >= '0' && c <= '1'))
+         {
+             str.push_back(c);
+             GetSymbol();
+         }
      }
-     if (!i)
+     if (!str.size())
          PrintError(TypeErrors::ID_MISS);
      return GetVarValue(str);
  }
 
  void Analizer::Print()
  {
-     if (last < 0)
+     if (varlist.size() == 0)
          std::cout << "No varibales defined yet.\n";
      else
-         std::cout << varlist[last].IdName << " = " << varlist[last].value;
+         std::cout << varlist[last].IdName << " = " << varlist[last].value << std::endl;
+ }
+
+ void Analizer::PrintAll()
+ {
+     if (!varlist.size())
+         printf("No variables defined yet.\n");
+     else
+         for (int i = 0; i < varlist.size(); i++)
+             std::cout<<varlist[i].IdName<< " = " << varlist[i].value<<std::endl;
  }
 
  void Analizer::Run()
@@ -239,9 +256,16 @@ int main(int argc, char** argv)
              GetSymbol();
          if (c == EOF)
              break;
-         std::cout << "Operator: " << i + 1;
+         std::cout << "Operator: " << i + 1<<std::endl;
          MethodS();
          Print();
      }
-     std::cout << std::format("Result ({} variables define in {} operators):\n", varlist.size(), i);
+     std::cout << "Result (" << varlist.size() << " variables define in " << i << " operators)\n";
+     PrintAll();
+ }
+
+ Var::Var(const std::string& src, long value)
+ {
+     this->IdName = src;
+     this->value = value;
  }
