@@ -4,34 +4,35 @@
 #include <fstream>
 #include <format>
 
-enum class TypeErrors
+enum class TypeErrors //Error codes
 {
     SYNTAX_ERROR,
-    MANY_VAR,
     UNDEF_ID,
-    LONG_ID,
     ID_MISS,
     MISSING_SYMBOL,
 };
 
-typedef struct Var
+struct Var // Struct of identifier
 {
-    std::string IdName;
-    long value;
-    Var(const std::string& src, long value);
-}Var;
+public:
+    std::string IdName; //Identifier name
+    long value;//Identifier value
+public:
+   Var(const std::string& src, long value);
+};
 
-std::ifstream out;
+std::ifstream in;
 
-typedef struct Analizer
+class Analizer
 {
-    std::vector<Var> varlist;
+private:
+    std::vector<Var> varlist; //List of the identifiers
     int c = EOF;
-    int last = -1; 
-
-    inline void GetSymbol();
-    long GetVarValue(std::string &str);
-    long& GetVarAdress(std::string name);
+    int last = -1; //Index of last identifier
+public:
+    inline void GetSymbol(); //Get symbol from input file
+    long GetVarValue(std::string &str); //Return identifier value
+    long& GetVarAdress(std::string name); //Return  identifier address or add in array
 
     long MethodC();
     void MethodS();
@@ -41,11 +42,11 @@ typedef struct Analizer
     long MethodM();
     long MethodI();
 
-    void Print();
-    void PrintAll();
-    void Run();
+    void Print(); //Output of one identifier
+    void PrintAll(); //Output of all identifiers
+    void Run(); //Run program
         
-}Analizer;
+};
 
 static void PrintError(TypeErrors typeer, std::string param = "")
 {
@@ -55,36 +56,37 @@ static void PrintError(TypeErrors typeer, std::string param = "")
         std::cout << "Error: Syntax error. " << std::endl;
         break;
     case TypeErrors::ID_MISS:
-        std::cout << "Error: "  << param << std::endl;
+        std::cout << "Error: Invalid character in identifier. "  << param << std::endl;
         break;
-    case TypeErrors::MANY_VAR:
-        std::cout << "Error: "  << param << std::endl;
+    case TypeErrors::UNDEF_ID:
+        std::cout << "Error: Undefined identifier: " << param << std::endl;
         break;
     case TypeErrors::MISSING_SYMBOL:
-        std::cout << "Error:" << param << "missing." << std::endl;
+        std::cout << "Error: " << param << "missing." << std::endl;
         break;
     }
-    out.close();
+    in.close();
     exit(1);
 }
 
-int main(int argc, char** argv)
+int main()
 {
-    out.open("text.txt", std::ios::binary);
-    if (!out.is_open())
+    in.open("text.txt", std::ios::binary);
+    if (!in.is_open())
     {
         std::cout << "Error! Can't open file "<< std::endl;
         return 2;
     }
+
     Analizer start;
     start.Run();
-    out.close();
+    in.close();
     return 0;
 }
 
  void Analizer::GetSymbol()
 {
-    c = out.get();
+    c = in.get();
 }
 
  long Analizer::GetVarValue(std::string& str)
@@ -101,13 +103,11 @@ int main(int argc, char** argv)
      
  }
 
-
  long& Analizer::GetVarAdress(std::string name)
  {
      if (name.empty() || name.size() == 0)
-     {
          PrintError(TypeErrors::SYNTAX_ERROR);
-     }
+
      for (int i = 0; i < varlist.size(); i++)
          if (varlist[i].IdName == name)
              return varlist[last=i].value;
@@ -120,7 +120,7 @@ int main(int argc, char** argv)
  long Analizer::MethodC()
  {
      long x = 0;
-     while (c >= '0' && c <= '1')
+     while (c >= '0' && c <= '1') // Translation from binary system to decimal
      {
          x *= 2;
          x += c - '0';
@@ -144,18 +144,23 @@ void Analizer::MethodS()
  long& Analizer::MethodL()
  {
      std::string str;
+     bool flag = false;
      if ((c >= 'a' && c <= 'z') || c == '_')
      {
          str.push_back(c);
          GetSymbol();
+         if ((c >= 'a' && c <= 'z') || c == '_')
+             flag = false;
+         else
+             flag = true;
          while ((c >= '0' && c <= '1'))
          {
              str.push_back(c);
              GetSymbol();
          }
      }
-     if (!str.size())
-         PrintError(TypeErrors::ID_MISS);
+     if (!flag)
+         PrintError(TypeErrors::ID_MISS, std::string(1, (char)c));
      return GetVarAdress(str);
  }
 
@@ -214,18 +219,24 @@ void Analizer::MethodS()
  long Analizer::MethodI()
  {
      std::string str;
+     bool flag = false;
      if ((c >= 'a' && c <= 'z') || c == '_' )
      {
+
          str.push_back(c);
          GetSymbol();
+         if ((c >= 'a' && c <= 'z') || c == '_')
+             flag = false;
+         else
+             flag = true;
          while ((c >= '0' && c <= '1'))
          {
              str.push_back(c);
              GetSymbol();
          }
      }
-     if (!str.size())
-         PrintError(TypeErrors::ID_MISS);
+     if (!flag)
+         PrintError(TypeErrors::ID_MISS,std::string(1,(char)c));
      return GetVarValue(str);
  }
 
@@ -264,8 +275,4 @@ void Analizer::MethodS()
      PrintAll();
  }
 
- Var::Var(const std::string& src, long value)
- {
-     this->IdName = src;
-     this->value = value;
- }
+ Var::Var(const std::string& src, long value):IdName{src},value{value}{}
