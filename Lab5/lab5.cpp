@@ -2,6 +2,7 @@
 #include <vector>
 #include <string>
 #include <fstream>
+#include <algorithm>
 
 std::ifstream in;
 std::ofstream out;
@@ -48,6 +49,7 @@ public:
     long TriadRef;
     Reference(const long TriadRef);
     std::string GetOperand()override;
+   
 };
 struct None :public Base
 {
@@ -58,10 +60,11 @@ public:
 
 class Triad
 {
-private:
+public:
     char operation;
     Base* op1;
     Base* op2;
+    bool isDelete = false;
 public:
     Triad(char operation, Base *op1, Base *op2);
     void OutTriad();
@@ -343,10 +346,39 @@ void Analizer::MethodS()
  }
  void Analizer::Optimization()
  {
-     bool isDelete = false;
+     int index = 0,index2=0;
      for (int i = 0; i < TriadList.size(); i++)
      {
-
+         if (TriadList[i].operation == '|' || TriadList[i].operation == '&' ||TriadList[i].operation == '~')
+         {
+                 index = std::atoi(TriadList[i].op1->GetOperand().c_str()+1);
+                 index2 = std::atoi(TriadList[i].op2->GetOperand().c_str()+1);
+                 if (TriadList[index2].operation == 'C')
+                 {
+                     TriadList[index2].isDelete = true;
+                     TriadList[i].op2 = new Constant(std::atoi(TriadList[index2].op1->GetOperand().c_str()));
+                     if (TriadList[index].operation == 'C')
+                     {
+                         TriadList[index].isDelete = true;
+                         TriadList[i].op1 = new Constant(std::atoi(TriadList[index].op1->GetOperand().c_str()));
+                         
+                         if (TriadList[i].operation == '|')
+                         {
+                             TriadList[i].operation = 'C';
+                             TriadList[i].op1 = new Constant(std::atoi(TriadList[i].op1->GetOperand().c_str()) |
+                                 (std::atoi(TriadList[i].op2->GetOperand().c_str())));
+                         }
+                         else
+                         {
+                             TriadList[i].operation = 'C';
+                             TriadList[i].op1 = new Constant(std::atoi(TriadList[i].op1->GetOperand().c_str()) &
+                                 (std::atoi(TriadList[i].op2->GetOperand().c_str())));
+                         }
+                     }
+                 }
+                 else if ()
+                 
+         }
      }
 
 
