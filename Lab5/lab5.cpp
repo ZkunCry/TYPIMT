@@ -371,15 +371,19 @@ void Analizer::MethodS()
                  if (TriadList[index2].operation == 'C')
                  {
                      TriadList[index2].isDelete = true;
+                     delete TriadList[i].op2;
                      TriadList[i].op2 = new Constant(std::atoi(TriadList[index2].op1->GetOperand().c_str()));
                      if (TriadList[index].operation == 'C')
                      {
                          TriadList[index].isDelete = true;
+
                          TriadList[i].op1 = new Constant(std::atoi(TriadList[index].op1->GetOperand().c_str()));
                          
                          if (TriadList[i].operation == '|')
                          {
                              TriadList[i].operation = 'C';
+                            
+
                              TriadList[i].op1 = new Constant(std::atoi(TriadList[i].op1->GetOperand().c_str()) |
                                  (std::atoi(TriadList[i].op2->GetOperand().c_str())));
                              TriadList[i].op2 = new None();
@@ -396,7 +400,7 @@ void Analizer::MethodS()
                  else if (TriadList[index].operation == 'C')
                  {
                      TriadList[index].isDelete = true;
-                     TriadList[i].op2 = new Constant(std::atoi(TriadList[index].op1->GetOperand().c_str()));
+                     TriadList[i].op1 = new Constant(std::atoi(TriadList[index].op1->GetOperand().c_str()));
                  }
          }
          else if (TriadList[i].operation == '~')
