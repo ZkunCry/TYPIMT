@@ -2,7 +2,8 @@
 #include <vector>
 #include <string>
 #include <fstream>
-#include <algorithm>
+#include <stack>
+
 
 std::ifstream in;
 std::ofstream out;
@@ -10,6 +11,12 @@ std::ofstream outoptimization;
 int IdTriad = 0;
 
 
+struct Rule
+{
+    char left;
+    std::string right;
+    Rule(char currentS, const std::string src);
+};
 class Base
 {
 public:
@@ -73,13 +80,28 @@ public:
 
 };
 
-class Scanner
+class Analizer
 {
 private:
     std::vector<Triad> TriadList;
     int _Lex = EOF;
     int _currentSymbol;
     const std::string _Native = "=;~|&()";
+    std::stack<std::string> Stack;
+
+    const Rule Rules[10] =
+    {
+        {'_',"ꞱSꞱ"},
+        {'I',"=E;"},
+        {'E',"E|T"},
+        {'E',"T"},
+        {'T',"T&M"},
+        {'T',"M"},
+        {'M',"~M"},
+        {'M',"(E)"},
+        {'M',"I"},
+        {'M',"C"}
+    };
 public:
 
     inline void GetSymbol(); //Get symbol from input file
@@ -129,12 +151,12 @@ static void PrintError(TypeErrors typeer, std::string param = "")
     exit(1);
 }
 
- void Scanner::GetSymbol()
+ void Analizer::GetSymbol()
 {
      _currentSymbol = in.get();
 }
 
- inline void Scanner::GetLex()
+ inline void Analizer::GetLex()
  {
      while (isspace(_currentSymbol)) GetSymbol();
 
@@ -164,13 +186,22 @@ static void PrintError(TypeErrors typeer, std::string param = "")
          GetSymbol();
      }
      else if (_currentSymbol == EOF)
-         _Lex = '#'; 
+         _Lex = 'Ʇ';
      else
          PrintError(TypeErrors::UNKOWN_SYMBOL, std::string((char)_currentSymbol,1));
+     if (_Lex == 'I' && Stack.top().back() == ';')
+     {
+         _Lex = '#';
+         
+         if (Stack.top() == "ꞱSꞱ")
+         {
+             Stack.top() = "S";
+         }
+         _Lex = 'I';
+     }
  }
 
- 
- void Scanner::Run()
+ void Analizer::Run()
  {
      GetSymbol();
      do
@@ -192,7 +223,7 @@ static void PrintError(TypeErrors typeer, std::string param = "")
          std::cout << "Error! Can't open file " << std::endl;
          return 2;
      }
-     Scanner start;
+     Analizer start;
      start.Run();
      in.close();
      out.close();
@@ -228,3 +259,5 @@ static void PrintError(TypeErrors typeer, std::string param = "")
  Base::~Base()
  {
  }
+
+ Rule::Rule(char currentS,const std::string src):left(currentS),right(src){}
