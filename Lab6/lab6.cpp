@@ -88,7 +88,7 @@ private:
     int _currentSymbol;
     const std::string _Native = "=;~|&()";
     std::stack<std::string> Stack;
-
+    
     const Rule Rules[10] =
     {
         {'_',"ꞱSꞱ"},
@@ -105,6 +105,8 @@ private:
 public:
 
     inline void GetSymbol(); //Get symbol from input file
+    const std::string GetStrFromStack();
+    void ReplaceContent(const std::string src);
     inline void GetLex();
     void Run(); //Run program
 };
@@ -189,26 +191,53 @@ static void PrintError(TypeErrors typeer, std::string param = "")
          _Lex = 'Ʇ';
      else
          PrintError(TypeErrors::UNKOWN_SYMBOL, std::string((char)_currentSymbol,1));
+
      if (_Lex == 'I' && Stack.top().back() == ';')
      {
-         _Lex = '#';
-         
-         if (Stack.top() == "ꞱSꞱ")
+         _Lex = 'Ʇ';
+
+         if (GetStrFromStack() == "ꞱSꞱ")
          {
-             Stack.top() = "S";
+             std::cout << "Ready!";
+             while (!Stack.empty()) {
+                 std::cout << Stack.top();
+                 Stack.pop();
+             }
+             Stack.push("Ʇ");
          }
          _Lex = 'I';
      }
  }
-
+ const std::string  Analizer::GetStrFromStack()
+ {
+     std::stack<std::string> stack_copy(Stack);
+     std::string str_buf;
+     while (!stack_copy.empty()) {
+         str_buf += stack_copy.top();
+         stack_copy.pop();
+     }
+     return str_buf;
+ }
+ void Analizer::ReplaceContent(const std::string src)
+ {
+     while (!Stack.empty())
+         Stack.pop();
+     Stack.push(src);
+ }
  void Analizer::Run()
  {
      GetSymbol();
+     Stack.push("Q");
      do
      {
          GetLex();    /* получаем лексему   */
          std::cout << _Lex<<std::endl;    /* и печатаем лексему */
-     } while (_Lex != '#');
+         if (GetStrFromStack() == "ꞱSꞱ")
+         {
+             std::cout << "Ready! " << GetStrFromStack() << std::endl;
+             ReplaceContent("Q");
+         }
+     } while (_Lex != EOF);
 
 
 
