@@ -5,10 +5,54 @@
 #include <stack>
 
 
+/*
+* Исходная грамматика
+    * S→ I=E;
+      E→ E “|” T | T
+      T→ T & M | M
+      M→ ~M | (E) | I | C
+      I→ AK | A
+      K→ DK | D
+      C → DC | D
+      A→[a-z] | _
+      D→0 | 1
+
+  Приводим грамматику в виду слабого предшествования:
+  
+  S'→ ꞱSꞱ
+  S → I = E;
+  E → E "|" T | T
+  T → T & M | M
+  M → ~M | (E) | I | C
+
+*/
+
+constexpr short int  MATRIX_SIZE = 15;
+
 std::ifstream in;
 std::ofstream out;
 std::ofstream outoptimization;
 int IdTriad = 0;
+
+char Matrix[MATRIX_SIZE][MATRIX_SIZE] =
+{
+    {' ', 'S', 'E', 'T', 'M', '=', ';', '|', '&', '~', '(', ')', 'I', 'C','#'},
+    {'S', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ','='},
+    {'E', ' ', ' ', ' ', ' ', ' ', '=', ' ', ' ', ' ', ' ', '=', ' ', ' ',' '},
+    {'T', ' ', ' ', ' ', ' ', ' ', '>', '>', '>', ' ', ' ', '>', ' ', ' ',' '},
+    {'M', ' ', ' ', ' ', ' ', ' ', '>', '>', '>', ' ', ' ', '>', ' ', ' ',' '},
+    {'=', ' ', '<=', '<', '<', ' ', ' ', ' ', ' ', ' ', '<', '<', '<', '<',' '},
+    {';', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ','>'},
+    {'|', '<', '=', '<=', '<', '<', ' ', '<', '<', '<', ' ', ' ', '<', '<',' '},
+    {'&', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '=', ' ', ' ',' '},
+    {'~', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '=', ' ', ' ',' '},
+    {'(', ' ', '<=', ' ', '<', '<', ' ', '<', '<', '<', ' ', ' ', ' ', ' ',' '},
+    {')', ' ', 'c', 'c', '<', '<', ' ', '<', '<', '<', ' ', ' ', ' ', ' ',' '},
+    {'I', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '>', ' ', '>', '>',' '},
+    {'C', ' ', ' ', ' ', '<', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',' '},
+    {'#', '=', ' ', ' ', '<', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '<', ' ',' '},
+};
+
 
 
 struct Rule
@@ -91,7 +135,7 @@ private:
     
     const Rule Rules[10] =
     {
-        {'_',"ꞱSꞱ"},
+        {'_',"#S#"},
         {'I',"=E;"},
         {'E',"E|T"},
         {'E',"T"},
@@ -102,13 +146,15 @@ private:
         {'M',"I"},
         {'M',"C"}
     };
+    const int rulesCount = sizeof(Rules) / sizeof(*Rules) - 1;
 public:
 
-    inline void GetSymbol(); //Get symbol from input file
+    inline void GetSymbol(); 
     const std::string GetStrFromStack();
     void ReplaceContent(const std::string src);
     inline void GetLex();
-    void Run(); //Run program
+    void Run();
+    char FindMatrixElement(char Y);
 };
 
 
@@ -188,22 +234,22 @@ static void PrintError(TypeErrors typeer, std::string param = "")
          GetSymbol();
      }
      else if (_currentSymbol == EOF)
-         _Lex = 'Ʇ';
+         _Lex = '#';
      else
          PrintError(TypeErrors::UNKOWN_SYMBOL, std::string((char)_currentSymbol,1));
 
      if (_Lex == 'I' && Stack.top().back() == ';')
      {
-         _Lex = 'Ʇ';
+         _Lex = '#';
 
-         if (GetStrFromStack() == "ꞱSꞱ")
+         if (GetStrFromStack() == "#S#")
          {
              std::cout << "Ready!";
              while (!Stack.empty()) {
                  std::cout << Stack.top();
                  Stack.pop();
              }
-             Stack.push("Ʇ");
+             Stack.push("#");
          }
          _Lex = 'I';
      }
@@ -232,7 +278,7 @@ static void PrintError(TypeErrors typeer, std::string param = "")
      {
          GetLex();    /* получаем лексему   */
          std::cout << _Lex<<std::endl;    /* и печатаем лексему */
-         if (GetStrFromStack() == "ꞱSꞱ")
+         if (GetStrFromStack() == "#S#")
          {
              std::cout << "Ready! " << GetStrFromStack() << std::endl;
              ReplaceContent("Q");
@@ -241,6 +287,21 @@ static void PrintError(TypeErrors typeer, std::string param = "")
 
 
 
+ }
+ char Analizer::FindMatrixElement(char Y)
+ {
+     char X = (char)Stack.top().c_str();
+     int i = 0, j = 0;
+     while (Matrix[i][0] != X)
+         i++;
+
+     while (Matrix[0][j] != Y)
+         j++;
+
+     if (j > MATRIX_SIZE)
+         PrintError(TypeErrors::UNKOWN_SYMBOL, "No matrix element found");
+
+     return Matrix[i][j];
  }
  int main()
  {
