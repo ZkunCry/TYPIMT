@@ -7,25 +7,26 @@
 
 /*
 * Исходная грамматика
-    * S→ I=E;
-      E→ E “|” T | T
-      T→ T & M | M
-      M→ ~M | (E) | I | C
-      I→ AK | A
-      K→ DK | D
+      S → I=E;
+      E → E “|” T | T
+      T → T & M | M
+      M → ~M | (E) | I | C
+      I → AK | A
+      K → DK | D
       C → DC | D
-      A→[a-z] | _
-      D→0 | 1
+      A → [a-z] | _
+      D → 0 | 1
 
   Приводим грамматику в виду слабого предшествования:
   
-  S'→ ꞱSꞱ
-  S → I = E;
-  E → E "|" T | T
-  T → T & M | M
-  M → ~M | (E) | I | C
-
+      S'→ ꞱSꞱ
+      S → I = E;
+      E → E "|" T | T
+      T → T & M | M
+      M → ~M | (E) | I | C
 */
+
+
 
 constexpr short int  MATRIX_SIZE = 15;
 
@@ -41,16 +42,16 @@ char Matrix[MATRIX_SIZE][MATRIX_SIZE] =
     {'E', ' ', ' ', ' ', ' ', ' ', '=', ' ', ' ', ' ', ' ', '=', ' ', ' ',' '},
     {'T', ' ', ' ', ' ', ' ', ' ', '>', '>', '>', ' ', ' ', '>', ' ', ' ',' '},
     {'M', ' ', ' ', ' ', ' ', ' ', '>', '>', '>', ' ', ' ', '>', ' ', ' ',' '},
-    {'=', ' ', '<=', '<', '<', ' ', ' ', ' ', ' ', ' ', '<', '<', '<', '<',' '},
+    {'=', ' ', '$', '<', '<', ' ', ' ', ' ', ' ', '<', '<', ' ', '<', '<',' '},
     {';', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ','>'},
-    {'|', '<', '=', '<=', '<', '<', ' ', '<', '<', '<', ' ', ' ', '<', '<',' '},
-    {'&', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '=', ' ', ' ',' '},
-    {'~', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '=', ' ', ' ',' '},
-    {'(', ' ', '<=', ' ', '<', '<', ' ', '<', '<', '<', ' ', ' ', ' ', ' ',' '},
-    {')', ' ', 'c', 'c', '<', '<', ' ', '<', '<', '<', ' ', ' ', ' ', ' ',' '},
-    {'I', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '>', ' ', '>', '>',' '},
-    {'C', ' ', ' ', ' ', '<', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',' '},
-    {'#', '=', ' ', ' ', '<', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '<', ' ',' '},
+    {'|', ' ', ' ', '$', '<', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '<', '<',' '},
+    {'&', ' ', ' ', ' ', '=', ' ', ' ', ' ', ' ', '<', '<', ' ', '<', '<',' '},
+    {'~', ' ', ' ', ' ', '=', ' ', ' ', ' ', ' ', '<', '<', ' ', '<', '<',' '},
+    {'(', ' ', '$', '<', '<', ' ', ' ', ' ', ' ', '<', '<', ' ', '<', '<',' '},
+    {')', ' ', ' ', ' ', ' ', ' ', '>', '>', '>', ' ', ' ', '>', ' ', ' ',' '},
+    {'I', ' ', ' ', ' ', ' ', '=', '>', '>', '>', ' ', ' ', '>', ' ', ' ',' '},
+    {'C', ' ', ' ', ' ', ' ', ' ', '>', '>', '>', ' ', ' ', '>', ' ', ' ',' '},
+    {'#', '=', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '<', ' ',' '},
 };
 
 
@@ -61,13 +62,6 @@ struct Rule
     std::string right;
     Rule(char currentS, const std::string src);
 };
-class Base
-{
-public:
-    virtual std::string GetOperand() { return ""; };
-    virtual ~Base();
-
-};
 enum class TypeErrors //Error codes
 {
     SYNTAX_ERROR,
@@ -77,62 +71,30 @@ enum class TypeErrors //Error codes
     UNKOWN_SYMBOL
 };
 
-struct Var:public Base // Struct of identifier
+
+struct Attitude
 {
 private:
-    std::string IdName;
+    char SymbolAttitude;
+    char Symbol;
 public:
-   Var(const std::string& src);
-   std::string GetOperand()override;
+    Attitude(const char currentAttitude,const char symbol):SymbolAttitude(currentAttitude),
+        Symbol(symbol){}
 };
 
-
-struct Constant:public Base
-{
-public:
-    long ConstValue;
-    Constant(const long value);
-    std::string GetOperand()override;
-};
-
-
-struct Reference :public Base
-{
-public:
-    long TriadRef;
-    Reference(const long TriadRef);
-    std::string GetOperand()override;
-   
-};
-struct None :public Base
-{
-public:
-    None();
-    std::string GetOperand()override;
-};
-
-class Triad
-{
-public:
-    char operation;
-    Base* op1;
-    Base* op2;
-    bool isDelete = false;
-public:
-    Triad(char operation, Base *op1, Base *op2);
-    void OutTriad();
-
-};
-
-class Analizer
+class Translation
 {
 private:
-    std::vector<Triad> TriadList;
+
     int _Lex = EOF;
     int _currentSymbol;
+
     const std::string _Native = "=;~|&()";
-    std::stack<std::string> Stack;
-    
+    /*  Текущий стэк
+        Левый операнд - хранит отношения
+        Правый операнд текущий символ Y
+    */
+    std::vector<Attitude> stack;    
     const Rule Rules[10] =
     {
         {'_',"#S#"},
@@ -147,33 +109,18 @@ private:
         {'M',"C"}
     };
     const int rulesCount = sizeof(Rules) / sizeof(*Rules) - 1;
+
 public:
 
     inline void GetSymbol(); 
-    const std::string GetStrFromStack();
-    void ReplaceContent(const std::string src);
+
     inline void GetLex();
     void Run();
     char FindMatrixElement(char Y);
+    void Analize();
+    char RuleConvolution();
 };
 
-
-Var::Var(const std::string& src) :IdName{ src }{}
-
-std::string Var::GetOperand()
-{
-    return this->IdName;
-}
-
-Reference::Reference(const long TriadRef)
-{
-    this->TriadRef = TriadRef;
-}
-
-std::string Reference::GetOperand()
-{
-    return '^' + std::to_string(this->TriadRef);
-}
 
 static void PrintError(TypeErrors typeer, std::string param = "")
 {
@@ -199,33 +146,27 @@ static void PrintError(TypeErrors typeer, std::string param = "")
     exit(1);
 }
 
- void Analizer::GetSymbol()
+ void Translation::GetSymbol()
 {
      _currentSymbol = in.get();
 }
 
- inline void Analizer::GetLex()
+ inline void Translation::GetLex()
  {
      while (isspace(_currentSymbol)) GetSymbol();
 
      if (isalpha(_currentSymbol) || _currentSymbol == '_')
      {
          GetSymbol();
-         while (isalnum(_currentSymbol) || _currentSymbol == '_')
-         {
-        
+         while (isdigit(_currentSymbol))
              GetSymbol();
-         }
          _currentSymbol = 'I'; 
      }
      else if (isdigit(_currentSymbol))
      {
          GetSymbol();
          while (isdigit(_currentSymbol))
-         {
-             
              GetSymbol();
-         }
          _currentSymbol = 'C'; 
      }
      else if (_Native.find(_currentSymbol) > -1)
@@ -238,59 +179,24 @@ static void PrintError(TypeErrors typeer, std::string param = "")
      else
          PrintError(TypeErrors::UNKOWN_SYMBOL, std::string((char)_currentSymbol,1));
 
-     if (_Lex == 'I' && Stack.top().back() == ';')
-     {
-         _Lex = '#';
+ }
 
-         if (GetStrFromStack() == "#S#")
-         {
-             std::cout << "Ready!";
-             while (!Stack.empty()) {
-                 std::cout << Stack.top();
-                 Stack.pop();
-             }
-             Stack.push("#");
-         }
-         _Lex = 'I';
-     }
- }
- const std::string  Analizer::GetStrFromStack()
- {
-     std::stack<std::string> stack_copy(Stack);
-     std::string str_buf;
-     while (!stack_copy.empty()) {
-         str_buf += stack_copy.top();
-         stack_copy.pop();
-     }
-     return str_buf;
- }
- void Analizer::ReplaceContent(const std::string src)
- {
-     while (!Stack.empty())
-         Stack.pop();
-     Stack.push(src);
- }
- void Analizer::Run()
+ void Translation::Run()
  {
      GetSymbol();
-     Stack.push("Q");
+     stack.push_back(Attitude('#', ' '));
      do
      {
          GetLex();    /* получаем лексему   */
          std::cout << _Lex<<std::endl;    /* и печатаем лексему */
-         if (GetStrFromStack() == "#S#")
-         {
-             std::cout << "Ready! " << GetStrFromStack() << std::endl;
-             ReplaceContent("Q");
-         }
      } while (_Lex != EOF);
 
-
-
  }
- char Analizer::FindMatrixElement(char Y)
+ char Translation::FindMatrixElement(char Y)
  {
-     char X = (char)Stack.top().c_str();
+     /*char X = (char)Stack.top().c_str();*/
+
+     char X = ' ';
      int i = 0, j = 0;
      while (Matrix[i][0] != X)
          i++;
@@ -300,8 +206,24 @@ static void PrintError(TypeErrors typeer, std::string param = "")
 
      if (j > MATRIX_SIZE)
          PrintError(TypeErrors::UNKOWN_SYMBOL, "No matrix element found");
-
      return Matrix[i][j];
+ }
+ void Translation::Analize()
+ {
+     char symbol = FindMatrixElement(_Lex);
+     if (symbol == ' ')
+         PrintError(TypeErrors::UNKOWN_SYMBOL, "No relation for lexeme " + symbol);
+     /*else if (symbol == '>')
+     {
+         Stack.push(std::string(symbol,1));
+         Stack.push(std::string(_Lex, 1));
+
+     }*/
+
+ }
+ char Translation::RuleConvolution()
+ {
+     return 0;
  }
  int main()
  {
@@ -313,41 +235,12 @@ static void PrintError(TypeErrors typeer, std::string param = "")
          std::cout << "Error! Can't open file " << std::endl;
          return 2;
      }
-     Analizer start;
+     Translation start;
      start.Run();
      in.close();
      out.close();
      outoptimization.close();
      return 0;
- }
-
- Constant::Constant(const long value)
- {
-     this->ConstValue = value;
- }
-
- std::string Constant::GetOperand()
- {
-     return std::to_string(this->ConstValue);
- }
-
- Triad::Triad(char operation, Base *op1, Base *op2):op1(op1),op2(op2),operation{operation}
- {}
-
- void Triad::OutTriad()
- {
-     out << operation << '(' << op1->GetOperand() << ", " << op2->GetOperand() << ')' << std::endl;
- }
-
- None::None(){  }
-
- std::string None::GetOperand()
- {
-     return std::string(1,'@');
- }
-
- Base::~Base()
- {
  }
 
  Rule::Rule(char currentS,const std::string src):left(currentS),right(src){}
