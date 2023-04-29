@@ -28,7 +28,7 @@
 
 
 
-constexpr short int  MATRIX_SIZE = 15;
+constexpr short int  MATRIX_SIZE = 16;
 
 std::ifstream in;
 std::ofstream out;
@@ -37,21 +37,22 @@ int IdTriad = 0;
 
 char Matrix[MATRIX_SIZE][MATRIX_SIZE] =
 {
-    {' ', 'S', 'E', 'T', 'M', '=', ';', '|', '&', '~', '(', ')', 'I', 'C','#'},
-    {'S', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ','='},
-    {'E', ' ', ' ', ' ', ' ', ' ', '=', ' ', ' ', ' ', ' ', '=', ' ', ' ',' '},
-    {'T', ' ', ' ', ' ', ' ', ' ', '>', '>', '>', ' ', ' ', '>', ' ', ' ',' '},
-    {'M', ' ', ' ', ' ', ' ', ' ', '>', '>', '>', ' ', ' ', '>', ' ', ' ',' '},
-    {'=', ' ', '$', '<', '<', ' ', ' ', ' ', ' ', '<', '<', ' ', '<', '<',' '},
-    {';', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ','>'},
-    {'|', ' ', ' ', '$', '<', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '<', '<',' '},
-    {'&', ' ', ' ', ' ', '=', ' ', ' ', ' ', ' ', '<', '<', ' ', '<', '<',' '},
-    {'~', ' ', ' ', ' ', '=', ' ', ' ', ' ', ' ', '<', '<', ' ', '<', '<',' '},
-    {'(', ' ', '$', '<', '<', ' ', ' ', ' ', ' ', '<', '<', ' ', '<', '<',' '},
-    {')', ' ', ' ', ' ', ' ', ' ', '>', '>', '>', ' ', ' ', '>', ' ', ' ',' '},
-    {'I', ' ', ' ', ' ', ' ', '=', '>', '>', '>', ' ', ' ', '>', ' ', ' ',' '},
-    {'C', ' ', ' ', ' ', ' ', ' ', '>', '>', '>', ' ', ' ', '>', ' ', ' ',' '},
-    {'#', '=', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '<', ' ',' '},
+    {' ','L', 'S', 'E', 'T', 'M', '=', ';', '|', '&', '~', '(', ')', 'I', 'C','#'},
+    {'L',' ', '=', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '<',' ','=' },
+    {'S',' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '>',' ','>'},
+    {'E',' ', ' ', ' ', ' ', ' ', ' ', '=', ' ', ' ', ' ', ' ', '=', ' ',' ',' '},
+    {'T',' ', ' ', ' ', ' ', ' ', ' ', '>', '>', '>', ' ', ' ', '>', ' ',' ',' '},
+    {'M',' ', ' ', ' ', ' ', ' ', ' ', '>', '>', '>', ' ', ' ', '>', ' ',' ',' '},
+    {'=',' ', ' ', '$', '<', '<', ' ', ' ', ' ', ' ', '<', '<', ' ', '<','<', ' '},
+    {';',' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '>',' ', '>'},
+    {'|',' ', ' ', ' ', '$', '<', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '<', '<', ' '},
+    {'&',' ', ' ', ' ', '=', ' ', ' ', ' ', ' ', ' ', '<', '<', ' ', '<', '<',' '},
+    {'~',' ', ' ', ' ', '=', ' ', ' ', ' ', ' ', ' ', '<', '<', ' ', '<', '<',' '},
+    {'(',' ', '$', '<', '<', ' ', ' ', ' ', ' ', ' ', '<', '<', ' ', '<', '<',' '},
+    {')',' ', ' ', ' ', ' ', ' ', ' ', '>', '>', '>', ' ', ' ', '>', ' ', ' ',' '},
+    {'I',' ', ' ', ' ', ' ', ' ', '=', '>', '>', '>', ' ', ' ', '>', ' ', ' ',' '},
+    {'C',' ', ' ', ' ', ' ', ' ', ' ', '>', '>', '>', ' ', ' ', '>', ' ', ' ',' '},
+    {'#','$', '=', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '<', ' ',' '},
 };
 
 
@@ -74,7 +75,7 @@ enum class TypeErrors //Error codes
 
 struct Attitude
 {
-private:
+public:
     char SymbolAttitude;
     char Symbol;
 public:
@@ -90,15 +91,12 @@ private:
     int _currentSymbol;
 
     const std::string _Native = "=;~|&()";
-    /*  Текущий стэк
-        Левый операнд - хранит отношения
-        Правый операнд текущий символ Y
-    */
     std::vector<Attitude> stack;    
-    const Rule Rules[10] =
+    const Rule Rules[11] =
     {
-        {'_',"#S#"},
-        {'I',"=E;"},
+        {'_',"#L#"},
+        {'L',"LS|S"},
+        {'S',"I=E;"},
         {'E',"E|T"},
         {'E',"T"},
         {'T',"T&M"},
@@ -160,16 +158,16 @@ static void PrintError(TypeErrors typeer, std::string param = "")
          GetSymbol();
          while (isdigit(_currentSymbol))
              GetSymbol();
-         _currentSymbol = 'I'; 
+         _Lex = 'I'; 
      }
      else if (isdigit(_currentSymbol))
      {
          GetSymbol();
          while (isdigit(_currentSymbol))
              GetSymbol();
-         _currentSymbol = 'C'; 
+         _Lex = 'C';
      }
-     else if (_Native.find(_currentSymbol) > -1)
+     else if (strchr(_Native.c_str(), _currentSymbol))
      {
          _Lex = _currentSymbol;
          GetSymbol();
@@ -187,16 +185,18 @@ static void PrintError(TypeErrors typeer, std::string param = "")
      stack.push_back(Attitude('#', ' '));
      do
      {
-         GetLex();    /* получаем лексему   */
-         std::cout << _Lex<<std::endl;    /* и печатаем лексему */
-     } while (_Lex != EOF);
+         GetLex();
+         Analize();
+         std::cout << (char)_Lex;
+         if (_Lex == ';')
+             std::cout << std::endl;
+
+     } while (_Lex != '#');
 
  }
  char Translation::FindMatrixElement(char Y)
  {
-     /*char X = (char)Stack.top().c_str();*/
-
-     char X = ' ';
+     char X = (stack.back().SymbolAttitude);
      int i = 0, j = 0;
      while (Matrix[i][0] != X)
          i++;
@@ -213,12 +213,18 @@ static void PrintError(TypeErrors typeer, std::string param = "")
      char symbol = FindMatrixElement(_Lex);
      if (symbol == ' ')
          PrintError(TypeErrors::UNKOWN_SYMBOL, "No relation for lexeme " + symbol);
-     /*else if (symbol == '>')
+     else if (symbol != '>')
+         stack.push_back(Attitude(_Lex, symbol));
+     else
      {
-         Stack.push(std::string(symbol,1));
-         Stack.push(std::string(_Lex, 1));
-
-     }*/
+         while (symbol == '>')
+         {
+             char result = RuleConvolution();
+             stack.push_back(Attitude(FindMatrixElement(result), result));
+             symbol = stack.back().SymbolAttitude;
+         }
+         
+     }
 
  }
  char Translation::RuleConvolution()
@@ -228,9 +234,8 @@ static void PrintError(TypeErrors typeer, std::string param = "")
  int main()
  {
      in.open("text.txt", std::ios::binary);
-     out.open("translation.txt");
-     outoptimization.open("optimization.txt");
-     if (!in.is_open() || !out.is_open())
+
+     if (!in.is_open())
      {
          std::cout << "Error! Can't open file " << std::endl;
          return 2;
