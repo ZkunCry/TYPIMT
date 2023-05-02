@@ -40,7 +40,7 @@ char Matrix[MATRIX_SIZE][MATRIX_SIZE] =
     {' ','L', 'S', 'E', 'T', 'M', '=', ';', '|', '&', '~', '(', ')', 'I', 'C','#'},
     {'L',' ', '=', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '<',' ','=' },
     {'S',' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '>',' ','>'},
-    {'E',' ', ' ', ' ', ' ', ' ', ' ', '=', ' ', ' ', ' ', ' ', '=', ' ',' ',' '},
+    {'E',' ', ' ', ' ', ' ', ' ', ' ', '=', '=', ' ', ' ', ' ', '=', ' ',' ',' '},
     {'T',' ', ' ', ' ', ' ', ' ', ' ', '>', '>', '>', ' ', ' ', '>', ' ',' ',' '},
     {'M',' ', ' ', ' ', ' ', ' ', ' ', '>', '>', '>', ' ', ' ', '>', ' ',' ',' '},
     {'=',' ', ' ', '$', '<', '<', ' ', ' ', ' ', ' ', '<', '<', ' ', '<','<', ' '},
@@ -79,6 +79,7 @@ public:
     char SymbolAttitude;
     char Symbol;
 public:
+    Attitude() { }
     Attitude(const char currentAttitude,const char symbol):SymbolAttitude(currentAttitude),
         Symbol(symbol){}
 };
@@ -182,28 +183,32 @@ static void PrintError(TypeErrors typeer, std::string param = "")
  void Translation::Run()
  {
      GetSymbol();
-     stack.push_back(Attitude('#', ' '));
+     stack.push_back(Attitude(' ', '#'));
      do
      {
          GetLex();
-         Analize();
+         Analize(); 
          std::cout << (char)_Lex;
          if (_Lex == ';')
-             std::cout << std::endl;
+         {
+             for (auto it = stack.begin(); it != stack.end(); ++it)
+                 std::cout << it->Symbol;
+         }
+            
 
      } while (_Lex != '#');
+     
 
  }
  char Translation::FindMatrixElement(char Y)
  {
-     char X = (stack.back().SymbolAttitude);
+     char X = stack.back().Symbol;
      int i = 0, j = 0;
      while (Matrix[i][0] != X)
          i++;
 
      while (Matrix[0][j] != Y)
          j++;
-
      if (j > MATRIX_SIZE)
          PrintError(TypeErrors::UNKOWN_SYMBOL, "No matrix element found");
      return Matrix[i][j];
@@ -214,22 +219,57 @@ static void PrintError(TypeErrors typeer, std::string param = "")
      if (symbol == ' ')
          PrintError(TypeErrors::UNKOWN_SYMBOL, "No relation for lexeme " + symbol);
      else if (symbol != '>')
-         stack.push_back(Attitude(_Lex, symbol));
+         stack.push_back(Attitude(symbol, _Lex));
      else
      {
          while (symbol == '>')
          {
              char result = RuleConvolution();
              stack.push_back(Attitude(FindMatrixElement(result), result));
+           
+             stack.push_back(Attitude(FindMatrixElement(_Lex), _Lex));
              symbol = stack.back().SymbolAttitude;
          }
          
      }
 
  }
+
  char Translation::RuleConvolution()
  {
-     return 0;
+     std::string base;
+     std::vector<Attitude> tempstack(stack);
+     size_t sizestack = tempstack.size();
+     int j = 0;
+     while (tempstack.back().SymbolAttitude != '<')
+     {
+
+         if (strchr("=>$#", stack.back().SymbolAttitude))
+         {
+             if (base.empty())
+                 base = tempstack.back().Symbol+base;
+             tempstack.pop_back();
+         }
+         else if (stack.back().SymbolAttitude == '$')
+         {
+             tempstack.back().SymbolAttitude = '<';
+         }
+         else
+             tempstack.pop_back();
+     }
+     if (base.empty())
+         base = stack.back().Symbol+base;
+
+     for (int i = 0; i <=rulesCount; i++)
+     {
+
+         if (base == Rules[i].right)
+         {
+             stack.pop_back();
+             return Rules[i].left;
+         }
+     }
+     
  }
  int main()
  {
