@@ -39,16 +39,16 @@ char Matrix[MATRIX_SIZE][MATRIX_SIZE] =
 {
     {' ','L', 'S', 'E', 'T', 'M', '=', ';', '|', '&', '~', '(', ')', 'I', 'C','#'},
     {'L',' ', '=', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '<',' ','=' },
-    {'S',' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',' ','>'},
+    {'S',' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '>',' ','>'},
     {'E',' ', ' ', ' ', ' ', ' ', ' ', '=', '=', ' ', ' ', ' ', '=', ' ',' ',' '},
-    {'T',' ', ' ', ' ', ' ', ' ', ' ', '>', '>', '>', ' ', ' ', '>', ' ',' ',' '},
+    {'T',' ', ' ', ' ', ' ', ' ', ' ', '>', '>', '=', ' ', ' ', '>', ' ',' ',' '},
     {'M',' ', ' ', ' ', ' ', ' ', ' ', '>', '>', '>', ' ', ' ', '>', ' ',' ',' '},
     {'=',' ', ' ', '$', '<', '<', ' ', ' ', ' ', ' ', '<', '<', ' ', '<','<', ' '},
     {';',' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '>',' ', '>'},
-    {'|',' ', ' ', ' ', '$', '<', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '<', '<', ' '},
-    {'&',' ', ' ', ' ', '=', ' ', ' ', ' ', ' ', ' ', '<', '<', ' ', '<', '<',' '},
-    {'~',' ', ' ', ' ', '=', ' ', ' ', ' ', ' ', ' ', '<', '<', ' ', '<', '<',' '},
-    {'(',' ', '$', '<', '<', ' ', ' ', ' ', ' ', ' ', '<', '<', ' ', '<', '<',' '},
+    {'|',' ', ' ', ' ', '$', '<', ' ', ' ', ' ', ' ', '<', '<', ' ', '<', '<', ' '},
+    {'&',' ', ' ', ' ', ' ', '=', ' ', ' ', ' ', ' ', '<', '<', ' ', '<', '<',' '},
+    {'~',' ', ' ', ' ', ' ', '=', ' ', ' ', ' ', ' ', '<', '<', ' ', '<', '<',' '},
+    {'(',' ', ' ', '$', '<', '<', ' ', ' ', ' ', ' ', '<', '<', ' ', '<', '<',' '},
     {')',' ', ' ', ' ', ' ', ' ', ' ', '>', '>', '>', ' ', ' ', '>', ' ', ' ',' '},
     {'I',' ', ' ', ' ', ' ', ' ', '=', '>', '>', '>', ' ', ' ', '>', ' ', ' ',' '},
     {'C',' ', ' ', ' ', ' ', ' ', ' ', '>', '>', '>', ' ', ' ', '>', ' ', ' ',' '},
@@ -92,10 +92,11 @@ private:
     int _currentSymbol;
     const std::string _Native = "=;~|&()";
     std::vector<Attitude> stack;    
-    const Rule Rules[11] =
+    const Rule Rules[12] =
     {
         {'_',"#L#"},
-        {'L',"LS|S"},
+        {'L',"LS"},
+        {'L',"S"},
         {'S',"I=E;"},
         {'E',"E|T"},
         {'E',"T"},
@@ -175,7 +176,7 @@ static void PrintError(TypeErrors typeer, std::string param = "")
      else if (_currentSymbol == EOF)
         _Lex = '#';
      else
-     PrintError(TypeErrors::UNKOWN_SYMBOL, std::string((char)_currentSymbol, 1));
+        PrintError(TypeErrors::UNKOWN_SYMBOL, std::string((char)_currentSymbol, 1));
 
  }
 
@@ -187,14 +188,15 @@ static void PrintError(TypeErrors typeer, std::string param = "")
      {
          GetLex();
          Analize();
-         std::cout << (char)_Lex;
          if (_Lex == ';')
          {
              for (auto it = stack.begin(); it != stack.end(); ++it)
                  std::cout << it->Symbol;
+             std::cout << std::endl;
          }
+         
      } while (_Lex != '#');
-
+  
 
  }
  char Translation::FindMatrixElement(char Y)
@@ -292,43 +294,6 @@ static void PrintError(TypeErrors typeer, std::string param = "")
          }
 
      }
-
-         /*for (int j = stack.size()-1; j > 0; j--)
-         {
-             if (stack[j].SymbolAttitude != '<')
-                 base = stack[j].Symbol + base;
-             else
-             {
-                 base = stack[j].Symbol + base;
-                 result = FindRules(base);
-                 if (result != NULL)
-                 {
-                     for (j; j < stack.size(); j++)
-                         stack.pop_back();
-                     return result;
-                 }
-                     
-                 else
-                 {
-                     base.clear();
-                     for (int q = j; q < stack.size(); q++)
-                     {
-                         if (stack[q].SymbolAttitude == '$')
-                         {
-                             for (; q < stack.size(); q++)
-                                 base += stack[q].Symbol;
-                             result =  FindRules(base);
-                             if (result != NULL)
-                             {
-                                 for (q = j; q < stack.size(); q++)
-                                     stack.pop_back();
-                                 return result;
-                             }
-                         }
-                     }
-                 }
-             }   
-         }*/
  }
  int main()
  {
