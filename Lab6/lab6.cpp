@@ -39,7 +39,7 @@ char Matrix[MATRIX_SIZE][MATRIX_SIZE] =
 {
     {' ','L', 'S', 'E', 'T', 'M', '=', ';', '|', '&', '~', '(', ')', 'I', 'C','#'},
     {'L',' ', '=', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '<',' ','=' },
-    {'S',' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '>',' ','>'},
+    {'S',' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',' ','>'},
     {'E',' ', ' ', ' ', ' ', ' ', ' ', '=', '=', ' ', ' ', ' ', '=', ' ',' ',' '},
     {'T',' ', ' ', ' ', ' ', ' ', ' ', '>', '>', '>', ' ', ' ', '>', ' ',' ',' '},
     {'M',' ', ' ', ' ', ' ', ' ', ' ', '>', '>', '>', ' ', ' ', '>', ' ',' ',' '},
@@ -52,7 +52,7 @@ char Matrix[MATRIX_SIZE][MATRIX_SIZE] =
     {')',' ', ' ', ' ', ' ', ' ', ' ', '>', '>', '>', ' ', ' ', '>', ' ', ' ',' '},
     {'I',' ', ' ', ' ', ' ', ' ', '=', '>', '>', '>', ' ', ' ', '>', ' ', ' ',' '},
     {'C',' ', ' ', ' ', ' ', ' ', ' ', '>', '>', '>', ' ', ' ', '>', ' ', ' ',' '},
-    {'#','$', '=', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '<', ' ',' '},
+    {'#','$', '<', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '<', ' ',' '},
 };
 
 
@@ -90,7 +90,6 @@ private:
 
     int _Lex = EOF;
     int _currentSymbol;
-
     const std::string _Native = "=;~|&()";
     std::vector<Attitude> stack;    
     const Rule Rules[11] =
@@ -112,7 +111,7 @@ private:
 public:
 
     inline void GetSymbol(); 
-
+    char FindRules(std::string src);
     inline void GetLex();
     void Run();
     char FindMatrixElement(char Y);
@@ -159,24 +158,24 @@ static void PrintError(TypeErrors typeer, std::string param = "")
          GetSymbol();
          while (isdigit(_currentSymbol))
              GetSymbol();
-         _Lex = 'I'; 
+        _Lex = 'I';
      }
      else if (isdigit(_currentSymbol))
      {
+     GetSymbol();
+     while (isdigit(_currentSymbol))
          GetSymbol();
-         while (isdigit(_currentSymbol))
-             GetSymbol();
-         _Lex = 'C';
+     _Lex = 'C';
      }
      else if (strchr(_Native.c_str(), _currentSymbol))
      {
-         _Lex = _currentSymbol;
-         GetSymbol();
+        _Lex = _currentSymbol;
+        GetSymbol();
      }
      else if (_currentSymbol == EOF)
-         _Lex = '#';
+        _Lex = '#';
      else
-         PrintError(TypeErrors::UNKOWN_SYMBOL, std::string((char)_currentSymbol,1));
+     PrintError(TypeErrors::UNKOWN_SYMBOL, std::string((char)_currentSymbol, 1));
 
  }
 
@@ -187,17 +186,15 @@ static void PrintError(TypeErrors typeer, std::string param = "")
      do
      {
          GetLex();
-         Analize(); 
+         Analize();
          std::cout << (char)_Lex;
          if (_Lex == ';')
          {
              for (auto it = stack.begin(); it != stack.end(); ++it)
                  std::cout << it->Symbol;
          }
-            
-
      } while (_Lex != '#');
-     
+
 
  }
  char Translation::FindMatrixElement(char Y)
@@ -226,50 +223,112 @@ static void PrintError(TypeErrors typeer, std::string param = "")
          {
              char result = RuleConvolution();
              stack.push_back(Attitude(FindMatrixElement(result), result));
-           
-             stack.push_back(Attitude(FindMatrixElement(_Lex), _Lex));
-             symbol = stack.back().SymbolAttitude;
+             symbol = FindMatrixElement(_Lex);
          }
-         
+         stack.push_back(Attitude(symbol, _Lex));
      }
-
  }
+ char Translation::FindRules(std::string src)
+ {
 
+     for (int i = 0; i <= rulesCount; i++)
+     {
+         if (src == Rules[i].right)
+             return Rules[i].left;
+     }
+     return NULL;
+ }
  char Translation::RuleConvolution()
  {
      std::string base;
-     std::vector<Attitude> tempstack(stack);
-     size_t sizestack = tempstack.size();
-     int j = 0;
-     while (tempstack.back().SymbolAttitude != '<')
+     char result;
+     int posL = 0,tempposL=0;
+
+     for (int j = stack.size() - 1; j > 0; j--)
+         if (stack[j].SymbolAttitude == '<')
+         {
+             posL = j;
+             break;
+         }
+            
+     if (posL == 0)
+     {
+         for (int j = stack.size() - 1; j > 0; j--)
+             if (stack[j].SymbolAttitude == '$')
+             {
+                 posL = j;
+                 break;
+             }
+     }
+
+     size_t _sizestack = stack.size();
+     while (true)
      {
 
-         if (strchr("=>$#", stack.back().SymbolAttitude))
+         tempposL = posL;
+         for(;posL< _sizestack;posL++)
+            base.push_back(stack[posL].Symbol);
+         result = FindRules(base);
+         posL = tempposL;
+         if (result != NULL)
          {
-             if (base.empty())
-                 base = tempstack.back().Symbol+base;
-             tempstack.pop_back();
+             for (posL; posL < _sizestack; posL++)
+                 stack.pop_back();
+             return result;
          }
-         else if (stack.back().SymbolAttitude == '$')
-         {
-             tempstack.back().SymbolAttitude = '<';
-         }
+
          else
-             tempstack.pop_back();
-     }
-     if (base.empty())
-         base = stack.back().Symbol+base;
-
-     for (int i = 0; i <=rulesCount; i++)
-     {
-
-         if (base == Rules[i].right)
          {
-             stack.pop_back();
-             return Rules[i].left;
+             base.clear();
+             for (; posL < _sizestack; posL++)
+             {
+                 if (stack[posL].SymbolAttitude == '$')
+                 {
+                     break;
+                 }
+             }
+             if (posL == stack.size())
+                 PrintError(TypeErrors::SYNTAX_ERROR, "Error!");
          }
+
      }
-     
+
+         /*for (int j = stack.size()-1; j > 0; j--)
+         {
+             if (stack[j].SymbolAttitude != '<')
+                 base = stack[j].Symbol + base;
+             else
+             {
+                 base = stack[j].Symbol + base;
+                 result = FindRules(base);
+                 if (result != NULL)
+                 {
+                     for (j; j < stack.size(); j++)
+                         stack.pop_back();
+                     return result;
+                 }
+                     
+                 else
+                 {
+                     base.clear();
+                     for (int q = j; q < stack.size(); q++)
+                     {
+                         if (stack[q].SymbolAttitude == '$')
+                         {
+                             for (; q < stack.size(); q++)
+                                 base += stack[q].Symbol;
+                             result =  FindRules(base);
+                             if (result != NULL)
+                             {
+                                 for (q = j; q < stack.size(); q++)
+                                     stack.pop_back();
+                                 return result;
+                             }
+                         }
+                     }
+                 }
+             }   
+         }*/
  }
  int main()
  {
