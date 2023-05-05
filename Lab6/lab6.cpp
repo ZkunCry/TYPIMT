@@ -94,7 +94,7 @@ private:
     std::vector<Attitude> stack;    
     const Rule Rules[12] =
     {
-        {'_',"#L#"},
+        {'W',"#L#"},
         {'L',"LS"},
         {'L',"S"},
         {'S',"I=E;"},
@@ -118,6 +118,8 @@ public:
     char FindMatrixElement(char Y);
     void Analize();
     char RuleConvolution();
+    int FindAttitude(const char symbol);
+    
 };
 
 
@@ -145,7 +147,7 @@ static void PrintError(TypeErrors typeer, std::string param = "")
     exit(1);
 }
 
- void Translation::GetSymbol()
+inline void Translation::GetSymbol()
 {
      _currentSymbol = in.get();
 }
@@ -196,7 +198,7 @@ static void PrintError(TypeErrors typeer, std::string param = "")
          }
          
      } while (_Lex != '#');
-  
+     std::cout << "Parsing was successful."  << std::endl;
 
  }
  char Translation::FindMatrixElement(char Y)
@@ -205,7 +207,6 @@ static void PrintError(TypeErrors typeer, std::string param = "")
      int i = 0, j = 0;
      while (Matrix[i][0] != X)
          i++;
-
      while (Matrix[0][j] != Y)
          j++;
      if (j > MATRIX_SIZE)
@@ -230,14 +231,12 @@ static void PrintError(TypeErrors typeer, std::string param = "")
          stack.push_back(Attitude(symbol, _Lex));
      }
  }
- char Translation::FindRules(std::string src)
+inline char Translation::FindRules(std::string src)
  {
 
      for (int i = 0; i <= rulesCount; i++)
-     {
          if (src == Rules[i].right)
              return Rules[i].left;
-     }
      return NULL;
  }
  char Translation::RuleConvolution()
@@ -245,28 +244,14 @@ static void PrintError(TypeErrors typeer, std::string param = "")
      std::string base;
      char result;
      int posL = 0,tempposL=0;
-
-     for (int j = stack.size() - 1; j > 0; j--)
-         if (stack[j].SymbolAttitude == '<')
-         {
-             posL = j;
-             break;
-         }
-            
-     if (posL == 0)
-     {
-         for (int j = stack.size() - 1; j > 0; j--)
-             if (stack[j].SymbolAttitude == '$')
-             {
-                 posL = j;
-                 break;
-             }
-     }
-
      size_t _sizestack = stack.size();
+
+     posL = FindAttitude('<');      
+     if (posL == 0)
+         posL = FindAttitude('$');
+
      while (true)
      {
-
          tempposL = posL;
          for(;posL< _sizestack;posL++)
             base.push_back(stack[posL].Symbol);
@@ -283,18 +268,22 @@ static void PrintError(TypeErrors typeer, std::string param = "")
          {
              base.clear();
              for (; posL < _sizestack; posL++)
-             {
                  if (stack[posL].SymbolAttitude == '$')
-                 {
                      break;
-                 }
-             }
+
              if (posL == stack.size())
-                 PrintError(TypeErrors::SYNTAX_ERROR, "Error!");
+                 PrintError(TypeErrors::SYNTAX_ERROR, "Couldn't find symbol < and <= .");
          }
 
      }
  }
+ inline int Translation::FindAttitude(const char symbol)
+ {
+     for (int j = stack.size() - 1; j > 0; j--)
+         if (stack[j].SymbolAttitude == symbol)
+             return j;
+ }
+
  int main()
  {
      in.open("text.txt", std::ios::binary);
@@ -304,6 +293,7 @@ static void PrintError(TypeErrors typeer, std::string param = "")
          std::cout << "Error! Can't open file " << std::endl;
          return 2;
      }
+
      Translation start;
      start.Run();
      in.close();
