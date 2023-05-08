@@ -82,10 +82,7 @@ std::string Var::GetOperand()
     return this->IdName;
 }
 
-Reference::Reference(const long TriadRef)
-{
-    this->TriadRef = TriadRef;
-}
+Reference::Reference(const long TriadRef):TriadRef(TriadRef){}
 
 std::string Reference::GetOperand()
 {
@@ -99,10 +96,7 @@ public:
     std::string GetOperand()override;
 };
 
-Constant::Constant(const long value)
-{
-    this->ConstValue = value;
-}
+Constant::Constant(const long value):ConstValue(value){}
 
 std::string Constant::GetOperand()
 {
@@ -124,10 +118,7 @@ std::string None::GetOperand()
     return std::string(1, '@');
 }
 
-Base::~Base()
-{
-}
-
+Base::~Base(){}
 
 char Matrix[MATRIX_SIZE][MATRIX_SIZE] =
 {
@@ -188,7 +179,6 @@ private:
 
     int _Lex = EOF;
     int _currentSymbol;
-    
     std::string name;
     int value;
 
@@ -225,6 +215,7 @@ public:
     void Analize();
     char RuleConvolution();
     int FindAttitude(const char symbol);
+    void Check(std::string src);
     bool GetVarValue(std::string& str); //Return identifier value
     bool GetVarAdress(std::string name); //Return  identifier address or add in array
     
@@ -267,6 +258,7 @@ inline void Translation::GetSymbol()
      if (isalpha(_currentSymbol) || _currentSymbol == '_')
      {
          std::string temp;
+         temp += _currentSymbol;
          GetSymbol();
          while (isdigit(_currentSymbol))
          {
@@ -278,10 +270,9 @@ inline void Translation::GetSymbol()
         _Lex = 'I';
      
      }
-     else if (isdigit(_currentSymbol))
+     else if (_currentSymbol >= '0' && _currentSymbol <= '1')
      {
          long x = 0;
-         GetSymbol();
          while (_currentSymbol >='0' && _currentSymbol <='1')
          {
              x *= 2;
@@ -345,10 +336,9 @@ inline void Translation::GetSymbol()
          if (_Lex == 'C')
          {
              attitude.ValueConstant = value;
-             Triad triad('C', new Var(name), new None());
+             Triad triad('C', new Constant(value), new None());
              TriadList.push_back(triad);
              IdTriad++;
-
              attitude._idTriad = IdTriad;
          }
          else if (_Lex == 'I')
@@ -368,10 +358,23 @@ inline void Translation::GetSymbol()
          while (symbol == '>')
          {
              char result = RuleConvolution();
-             stack.push_back(Attitude(FindMatrixElement(result), result));
+             Attitude attitude(FindMatrixElement(result), result);
+             attitude._idTriad = IdTriad;
+             stack.push_back(attitude);
              symbol = FindMatrixElement(_Lex);
          }
-         stack.push_back(Attitude(symbol, _Lex));
+         Attitude attitude(symbol, _Lex);
+         if (_Lex == 'I')
+         {
+             Attitude attitude(symbol, _Lex);
+             attitude.nameIdentifier = name;
+
+             Triad triad('V', new Var(name), new None());
+             TriadList.push_back(triad);
+             IdTriad++;
+             attitude._idTriad = IdTriad;
+         }
+         stack.push_back(attitude);
      }
  }
 inline char Translation::FindRules(std::string src)
@@ -399,7 +402,8 @@ inline char Translation::FindRules(std::string src)
 
          for(;posL< _sizestack;posL++)
             base.push_back(stack[posL].Symbol);
-         GetVarValue(name);
+
+         Check(base);
          result = FindRules(base);
          posL = tempposL;
          if (result != NULL)
@@ -429,6 +433,46 @@ inline char Translation::FindRules(std::string src)
              return j;
  }
 
+ void Translation::Check(std::string src)
+ {
+     int pos;
+     if (src == "E|T")
+     {
+          pos = FindAttitude('$');
+         Triad triad('|', new Reference(stack[pos-2]._idTriad), new Reference(stack[pos]._idTriad));
+         TriadList.push_back(triad);
+         IdTriad++;
+
+     }
+     else if (src == "T&M")
+     {
+         pos = FindAttitude('<');
+         Triad triad('&', new Reference(stack[pos]._idTriad), new Reference(stack[pos+2]._idTriad));
+         TriadList.push_back(triad);
+         IdTriad++;
+
+     }
+     else if (src == "I=E;")
+     {
+         pos = FindAttitude('<');
+         Triad triad('=', new Reference(stack[pos]._idTriad), new Reference(stack[pos+2]._idTriad));
+         TriadList.push_back(triad);
+         IdTriad++;
+     }
+     else if (src == "~M")
+     {
+         pos = FindAttitude('<');
+         Triad triad('~', new Reference(stack[pos+1]._idTriad), new None());
+         TriadList.push_back(triad);
+         IdTriad++;
+     }
+     else
+     {
+         IdTriad = stack.back()._idTriad;
+
+     }
+ }
+
  bool Translation::GetVarValue(std::string& str)
  {
      if (str.size() == 0 || str.empty())
@@ -439,7 +483,6 @@ inline char Translation::FindRules(std::string src)
              return true;
 
      PrintError(TypeErrors::UNDEF_ID, str);
-   
  }
 
  bool Translation::GetVarAdress(std::string name)
@@ -451,7 +494,7 @@ inline char Translation::FindRules(std::string src)
          if (varlist[i].GetOperand() == name)
              return true;
      varlist.push_back(Var{ name });
- 
+     return true;
  }
 
  int main()
