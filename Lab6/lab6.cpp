@@ -311,6 +311,11 @@ inline void Translation::GetSymbol()
          
      } while (_Lex != '#');
      std::cout << "Parsing was successful."  << std::endl;
+     for (int i = 0; i < TriadList.size(); i++)
+     {
+         out << i + 1 << " : ";
+         TriadList[i].OutTriad();
+     }
 
  }
  char Translation::FindMatrixElement(char Y)
@@ -366,7 +371,6 @@ inline void Translation::GetSymbol()
          Attitude attitude(symbol, _Lex);
          if (_Lex == 'I')
          {
-             Attitude attitude(symbol, _Lex);
              attitude.nameIdentifier = name;
 
              Triad triad('V', new Var(name), new None());
@@ -399,10 +403,10 @@ inline char Translation::FindRules(std::string src)
      while (true)
      {
          tempposL = posL;
-
+         
          for(;posL< _sizestack;posL++)
             base.push_back(stack[posL].Symbol);
-
+         
          Check(base);
          result = FindRules(base);
          posL = tempposL;
@@ -466,10 +470,10 @@ inline char Translation::FindRules(std::string src)
          TriadList.push_back(triad);
          IdTriad++;
      }
-     else
+     else if (src == "(E)")
      {
-         IdTriad = stack.back()._idTriad;
-
+         pos = FindAttitude('<');
+         IdTriad = stack[pos + 1]._idTriad;
      }
  }
 
