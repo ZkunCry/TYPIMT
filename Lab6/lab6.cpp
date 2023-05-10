@@ -215,7 +215,7 @@ public:
     void Analize();
     char RuleConvolution();
     int FindAttitude(const char symbol);
-    void Check(std::string src);
+    void Check(std::string src,size_t pos);
     bool GetVarValue(std::string& str); //Return identifier value
     bool GetVarAdress(std::string name); //Return  identifier address or add in array
     
@@ -407,7 +407,7 @@ inline char Translation::FindRules(std::string src)
          for(;posL< _sizestack;posL++)
             base.push_back(stack[posL].Symbol);
          
-         Check(base);
+         Check(base,tempposL);
          result = FindRules(base);
          posL = tempposL;
          if (result != NULL)
@@ -437,20 +437,20 @@ inline char Translation::FindRules(std::string src)
              return j;
  }
 
- void Translation::Check(std::string src)
+ void Translation::Check(std::string src,size_t pos)
  {
-     int pos;
+    
      if (src == "E|T")
      {
-          pos = FindAttitude('$');
-         Triad triad('|', new Reference(stack[pos-2]._idTriad), new Reference(stack[pos]._idTriad));
+        
+         Triad triad('|', new Reference(stack[pos]._idTriad), new Reference(stack[pos+2]._idTriad));
          TriadList.push_back(triad);
          IdTriad++;
 
      }
      else if (src == "T&M")
      {
-         pos = FindAttitude('<');
+         
          Triad triad('&', new Reference(stack[pos]._idTriad), new Reference(stack[pos+2]._idTriad));
          TriadList.push_back(triad);
          IdTriad++;
@@ -458,21 +458,28 @@ inline char Translation::FindRules(std::string src)
      }
      else if (src == "I=E;")
      {
-         pos = FindAttitude('<');
+        
+       
+         GetVarAdress(stack[pos].nameIdentifier);
          Triad triad('=', new Reference(stack[pos]._idTriad), new Reference(stack[pos+2]._idTriad));
          TriadList.push_back(triad);
          IdTriad++;
      }
+     else if (src == "I")
+     {
+        
+         GetVarValue(stack[pos].nameIdentifier);
+     }
      else if (src == "~M")
      {
-         pos = FindAttitude('<');
+        
          Triad triad('~', new Reference(stack[pos+1]._idTriad), new None());
          TriadList.push_back(triad);
          IdTriad++;
      }
      else if (src == "(E)")
      {
-         pos = FindAttitude('<');
+        
          IdTriad = stack[pos + 1]._idTriad;
      }
  }
